@@ -10,8 +10,16 @@
 
 
 <script>
+function formatTweetElement(tweet){
 
-const tweetsElement = document.getElementById("tweets") 
+  var formatTweetElement = "<div class='mb-4 tweet' id='tweet-" + tweet.id + "'><p>" + tweet.content + "</p></div>"
+  return formatTweetElement
+}
+
+
+
+
+const tweetsElement = document.getElementById("tweets")
 tweetsElement.innerHTML = "loading..."
 
 const xhr = new XMLHttpRequest()
@@ -24,8 +32,18 @@ xhr.responseType = responseType
 xhr.open(method, url)
 xhr.onload = function() {
   const serverResponse = xhr.response
-  var listedItems = serverResponse.response
-  console.log(listedItems)
+  const listedItems = serverResponse.response
+  var finalTweetStr = ""
+  var i;
+  for(i=0;i<listedItems.length;i++){
+    var tweetObj = listedItems[i]
+    var currentItem = formatTweetElement(tweetObj)
+      finalTweetStr += currentItem
+
+  }
+  tweetsElement.innerHTML = finalTweetStr
+
+
 }
 xhr.send()
 
