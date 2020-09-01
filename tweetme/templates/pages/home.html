@@ -1,20 +1,33 @@
 {% extends "base.html" %}
 {% block head_title %}Tweet Me{% endblock head_title %}
 {% block content %}
+
+<div class="row text-center">
+  <div class="col">
 <h1>Welcome to Tweet me</h1>
+</div>
+</div>
+<a href="{% url 'tweetcreate' %}"> Create tweet </a>
 
 
-<div id="tweets"> Replace me </div>
+<div class="row mb-3">
+<div class='col-md-4 mx-auto col-10'>
+  <form class="form" method="POST" action="{% url 'tweetcreate' %}">{% csrf_token %}
+    <input type="hidden" value="/" name="next" />
+    <textarea class="form-control" name="content" placeholder="your tweet"></textarea>
+    <button class="btn btn-primary" type="submit">Submit</button>
+    </form>
+  </div>
+  </div>
+
+
+<div class="row" id="tweets"> Replace me </div>
 
 
 
 
 <script>
-function formatTweetElement(tweet){
 
-  var formatTweetElement = "<div class='mb-4 tweet' id='tweet-" + tweet.id + "'><p>" + tweet.content + "</p></div>"
-  return formatTweetElement
-}
 
 
 
@@ -26,6 +39,38 @@ const xhr = new XMLHttpRequest()
 const method = "GET"
 const url = "/tweets"
 const responseType = "json"
+
+
+
+function handleDidLike(tweet_id, currentCount) {
+
+console.log(tweet_id, currentCount)
+
+}
+
+
+
+function likebtn(tweet){
+
+  return "<button class='btn btn-primary btn-sm' onclick=handleDidLike(" + tweet.id + "," + tweet.Likes + ")>" + tweet.Likes +" Likes</button>"
+
+}
+
+
+
+function formatTweetElement(tweet){
+
+  var formatTweetElement = "<div class='col-12 col-md-10 mx-auto rounded border-top border-bottom py-3 mb-4 tweet' id='tweet-" + tweet.id
+  + "'><p>" + tweet.content +
+
+  "</p><div class='btn group'>" +  likebtn(tweet) +
+
+
+    "</div></div>"
+  return formatTweetElement
+}
+
+
 
 
 xhr.responseType = responseType
