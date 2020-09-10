@@ -14,7 +14,7 @@
 <div class='col-md-4 mx-auto col-10'>
   <form class="form" method="POST" id="tweet-create-form" action="{% url 'tweetcreate' %}">{% csrf_token %}
     <input type="hidden" value="/" name="next" />
-    <textarea class="form-control" name="content" placeholder="your tweet"></textarea>
+    <textarea required class="form-control" name="content" placeholder="your tweet"></textarea>
     <button class="btn btn-primary" type="submit">Submit</button>
     </form>
   </div>
@@ -35,11 +35,33 @@ function handleTweetCreateFormDidSubmit(event){
   const url = myForm.getAttribute("action")
   const method = myForm.getAttribute("method")
   const xhr = new XMLHttpRequest()
+  const responseType = "json"
+  xhr.responseType = responseType
   xhr.open(method,url)
+  xhr.setRequestHeader("HTTP_X_REQUESTED_WITH", "XMLHttpRequest")
+  xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest")
   xhr.onload = function() {
-    const serverResponse = xhr.response
-    const tweetsEl = document.getElementById("tweets")
-    loadTweets(tweetsEl)
+    if (xhr.status === 201) {
+      const newTweetJson = xhr.response
+      console.log(newTweetJson.Likes)
+      const newTweetElement = formatTweetElement(newTweetJson)
+      console.log(newTweetElement)
+      const ogHtml = tweetsContainerElement.innerHTML 
+      tweetsContainerElement.innerHTML = newTweetElement + ogHtml
+      myForm.reset()
+
+    } else if (xhr.status === 400) {
+      const errorJson = xhr.response 
+
+      console.log(errorJson)
+    } else if (xhr.status === 500){
+      alert("There was an server error.")
+    }
+    else if (xhr.status === 401){
+      alert("You must log in")
+      window.location.href = "/login"
+    }
+  
   }
   xhr.send(myFormData)
 }
@@ -48,7 +70,7 @@ const tweetCreateFormEl = document.getElementById("tweet-create-form")
 
 tweetCreateFormEl.addEventListener("submit",handleTweetCreateFormDidSubmit)
 
-const tweetsEl = document.getElementById("tweets")
+const tweetsContainerElement = document.getElementById("tweets")
 
 function loadTweets(tweetsElement) {
 const xhr = new XMLHttpRequest()
@@ -77,7 +99,7 @@ const responseType = "json"
 
 }
 
-loadTweets(tweetsEl)
+loadTweets(tweetsContainerElement)
 
 
 

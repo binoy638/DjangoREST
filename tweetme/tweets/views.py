@@ -4,7 +4,10 @@ from django.http import JsonResponse, HttpResponse
 from tweets.models import Tweet
 from django.utils.http import is_safe_url
 from django.conf import settings
+from rest_framework.decorators import api_view
+from rest_framework.response import Response 
 from .forms import TweetForm
+from .serializer import TweetSerializer 
 
 ALLOWED_HOSTS = settings.ALLOWED_HOSTS
 
@@ -16,24 +19,44 @@ def home_page(request):
 def tweet_list_view(request, *args, **kwargs):
     qs = Tweet.objects.all()
 
-    tweet_list = [{"id": x.id, "content":x.content, "Likes":random.randint(0,129)} for x in qs]
+    tweet_list = [x.serialize() for x in qs]
 
     data = {
     'response': tweet_list
     }
     return JsonResponse(data)
 
-
-
+@api_view(['POST'])
 def tweet_create_view(request, *args, **kwargs):
+    serializer = TweetSerializer(data=request.POST or None )
+    if serializer.is_valid(raise_exception=True):
+        serializer.save(user = request.user)
+        return Response(serializer.data,status=201)
+    return Response({}, status=400)
+
+def tweet_create_view_pure_django(request, *args, **kwargs):
+    user = request.user
+    if not request.user.is_authenticated:
+        user = None 
+        if request.is_ajax():
+            return JsonResponse({}, status=401)
+        return redirect(settings.LOGIN_URL)
     form = TweetForm(request.POST or None)
     next_url = request.POST.get("next") or None
     if form.is_valid():
         obj = form.save(commit=False)
+        obj.user = user
         obj.save()
+        if request.is_ajax():
+            return JsonResponse(obj.serialize(), status=201)
+
         if next_url != None and is_safe_url(next_url, ALLOWED_HOSTS):
             return redirect(next_url)
         form = TweetForm()
+
+    if form.errors:
+        if request.is_ajax():
+            return JsonResponse(form.errors, status=400)
     return render(request, 'components/forms.html', context={'form':form})
 
 def tweet_detail_view(request,tweet_id):
